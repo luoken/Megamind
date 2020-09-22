@@ -1,6 +1,6 @@
 # Megamind
 
-**TODO: Add description**
+Because I did not think of `Mastermind` first, I named this Megamind. This is just a simple exercise to play around with `GenServers`.
 
 ## Installation
 
