@@ -2,49 +2,50 @@ defmodule Megamind do
   use GenServer
 
   @moduledoc """
-  Documentation for `Megamind`.
+  Megamind is an example application to play around with GenServer and illustrate how they would work. 
   """
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Megamind.hello()
-      :world
-
-  """
   def hard_worker(list) do
-    {:ok, pid} = GenServer.start_link(__MODULE__, list)
+    {:ok, pid} = GenServer.start_link(__MODULE__, [])
 
-    caller(pid, :read)
+    :timer.tc(fn -> iterate_list(pid, list) end)
+    |> format_string()
   end
 
-  def caller(pid, func) do
-    call = GenServer.call(pid, func)
+  defp iterate_list(pid, [head | tail]) do
+    GenServer.call(pid, {:read, head})
+    Process.sleep(1_000)
+    iterate_list(pid, tail)
+  end
 
-    IO.inspect(call, label: "CALLER")
+  defp iterate_list(pid, []) do
+    GenServer.call(pid, {:read, nil})
+  end
 
-    case call do
-      nil -> nil
-      _ -> Process.sleep(1000)
-    end
+  defp format_string({time, list}) do
+    time_to_complete = handle_time(time)
 
-    caller(pid, func)
+    "The list [#{Enum.join(list, ", ")}] took #{time_to_complete} seconds to complete."
+  end
+
+  defp handle_time(time) do
+    time
+    |> Kernel./(1_000_000)
   end
 
   @impl true
-  def init(list) do
-    {:ok, list}
+  def init(_arg) do
+    {:ok, []}
   end
 
   @impl true
-  def handle_call(:read, _from, [head | tail]) do
-    {:reply, head, tail}
+  def handle_call({:read, nil}, _from, state) do
+    {:reply, state, state}
   end
 
   @impl true
-  def handle_call(:read, _from, []) do
-    {:stop, nil, []}
+  def handle_call({:read, val}, _from, state) do
+    state = state ++ [val]
+    {:reply, state, state}
   end
 end
